@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="icon" href="https://drive.google.com/drive/u/0/folders/0B_1hF35vdDqENlZRQVB3dXpPR00">
+	<title>Uniform Part Request Form</title>
+
+	<style>
+		body {
+			background-color: #000000;
+			color: #ffffff;
+		}
+
+		div {
+			text-align: center;
+			margin: 1.5em;
+		}
+
+		select {
+			color: white;
+			margin-top: 0.5em;
+			background-color: #777777;
+			border: none;
+			border-bottom: 0.2em #ffffff solid;
+			border-radius: 0.2em;
+			width: 20em;
+		}
+
+		input {
+			color: white;
+			margin-top: 0.5em;
+			background-color: #777777;
+			border: none;
+			border-bottom: 0.2em #ffffff solid;
+			border-radius: 0.2em;
+			width: 20em;
+		}
+
+		input#submission {
+			border: none;
+			background-color: #199fff;
+			height: 3em;
+		}
+
+		input#submission:active {
+			background-color: #016dba;
+		}
+
+	</style>
+</head>
+
+<body>
+
+	<script type="text/javascript" language="JavaScript">
+		<!-- putting some js script here as I am not sure it always works with app script -->
+		function check(obj) {
+			if(obj.email.value <= 0) {
+				alert('You must entre an email.');
+				return false;
+			}
+
+			// email checker
+			var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+			if(!re.test(String(obj.email.value).toLowerCase())) {
+				alert('Please entre a valid email.');
+				return false;
+			}
+
+			if(obj.email.value !== obj.emailValidate.value) {
+				alert('Your email does not match.');
+				return false;
+			}
+
+			console.log('success, submitting');
+			// google.script.run.updateResponse(obj);
+			return true;
+		}
+	</script>
+
+	<FORM id="reqForm" action="completed.html" onsubmit="return check(this);">
+		<div>
+			Email:<br>
+			<input type="text" name="email"><br>
+		</div>
+		<div>
+			Re-entre your email:<br>
+			<input type="text" name="emailValidate"><br>
+		</div>
+		<div>
+			LEGAL First name:<br>
+			<input type="text" name="fname"><br>
+		</div>
+		<div>
+			Last name:<br>
+			<input type="text" name="lname"><br>
+		</div>
+		<div>
+			Rank:<br>
+			<select name="rank">
+				<option value="AC">I don't know my rank!</option>
+				<option value="AC">AC</option>
+				<option value="LAC">LAC</option>
+				<option value="CPL">Corporal</option>
+				<option value="FCPL">Flight Corporal</option>
+				<option value="SGT">Sergeant</option>
+				<option value="FSGT">Flight Sergeant</option>
+				<option value="WO2">Warrant Officer 2nd Class</option>
+				<option value="WO1">Warrant Officer 1st Class</option>
+			</select><br>
+		</div>
+		<div>
+			Part rquired:<br>
+			<select name="rank">
+				<option value="Headdress">Wedge</option>
+				<option value="Dress Shirt">Dress Shirt</option>
+				<option value="MT">Pants</option>
+				<option value="Boots">Boots</option>
+				<option value="Belt">Belt</option>
+				<option value="Tie">Tie</option>
+				<option value="Tunic">Tunic</option>
+				<option value="BS">Sweater (C3A)</option>
+				<option value="PT">PT Shirt</option>
+				<option value="Socks">Socks</option>
+				<option value="Parka">PT Shirt</option>
+			</select><br>
+		</div>
+		<div>
+			Current size:<br>
+			<input type="text" name="osize"><br>
+		</div>
+		<div>
+			Horizontal fitting problem:<br>
+			<select name="widthChange">
+				<option value="0">Just fine!</option>
+				<option value="1">Too tight</option>
+				<option value="-1">Too loose</option>
+			</select><br>
+		</div>
+		<div>
+			Vertical / lengthwise fitting problem:<br>
+			<select name="lengthChange">
+				<option value="0">Just fine!</option>
+				<option value="1">Too short</option>
+				<option value="-1">Too long</option>
+			</select><br>
+		</div>
+		<div>
+			Other notes:<br>
+			<input type="text" name="notes"><br>
+		</div>
+		<div>
+			<input type="submit" value="Submit" id="submission">
+		</div>
+	</FORM>
+
+</body>
+</html>
