@@ -164,26 +164,78 @@ function getSizeIndex(part, osize, sheet) {
 	return -1;
 };
 
-function getSizeByIndex(part, index, sheet) {}
+function getSizeByIndex(part, index, sheet) {};
 
-function getNextWedgeSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
+function getGenericSizedItem(part, osize, osizeI, widthOffset, lengthOffset, sheet) {
 	if(widthOffset > 0 || lengthOffset > 0) {
 		osizeI++;
 	} else if(widthOffset < 0 || lengthOffset < 0) {
 		osizeI--;
 	}
-	return {nsize: getSizeByIndex(osizeI + 1), nsizeI: osizeI + 1};
+	return {nsize: getSizeByIndex(part, osizeI + 1, sheet), nsizeI: osizeI + 1};
 };
 
-function getNextDSSize(osize, osizeI, widthOffset, lengthOffset, sheet) {};
+function getNextWedgeSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
+	return getGenericSizedItem('Headdress', osize, osizeI, widthOffset, lengthOffset, sheet);
+};
 
-function getNextTunicSize(osize, osizeI, widthOffset, lengthOffset, sheet) {};
+function getNextDSSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
+	return getGenericSizedItem('Dress Shirt', osize, osizeI, widthOffset, lengthOffset, sheet);
+};
 
-function getNextParkaSize(osize, osizeI, widthOffset, lengthOffset, sheet) {};
+function getGenericFourDigitSize(part, osize, osizeI, widthOffset, lengthOffset, sheet) {
+	var nsize = osize;
+	var tempi = osizeI;
 
-function getNextPantsSize(osize,osizeI, widthOffset, lengthOffset, sheet) {};
+	// traverse length first
+	while(ltol_t > 0 && tempi > 0 && lengthOffset && nsize.substring(0, 2) == osize.substring(0, 2)) {
+		tempi += lengthOffset;
+		// nsizeI = getSizeIndex(part, tempi, sheet);
+		nsize = getSizeByIndex(part, tempi, sheet);
+	}
+	if(lengthOffset) {
+		ltol_t--;
+	}
 
-function getNextBootSize(osize,osizeI, widthOffset, lengthOffset, sheet) {};
+	// move to same width
+	while(nsize.substring(2) != osize.substring(2)) {
+		tempi++;
+		// nsizeI = getSizeIndex(part, tempi, sheet);
+		nsize = getSizeByIndex(part, tempi, sheet);
+	}
+
+	// then bother with width
+	while(wtol_t > 0 && tempi > 0 && widthOffset && nsize.substring(2) == osize.substring(2)) {
+		tempi += widthOffset;
+		nsize = getSizeByIndex(part, tempi, sheet);
+	}
+	if(widthOffset) {
+		wtol_t--;
+	}
+
+	return {nsize: nsize, nsizeI: tempi};
+};
+
+function getNextTunicSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
+	return getGenericFourDigitSize("Tunic", osize, osizeI, widthOffset, lengthOffset, sheet);
+};
+
+function getNextParkaSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
+	return getGenericFourDigitSize("Parka", osize, osizeI, widthOffset, lengthOffset, sheet);
+};
+
+function getNextPantsSize(osize,osizeI, widthOffset, lengthOffset, sheet) {
+	return getGenericFourDigitSize("MT", osize, osizeI, widthOffset, lengthOffset, sheet);
+};
+
+function getNextBootSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
+	// boots are two part sized
+	// osize is an obj
+	var nsize = {
+		length: osize.length,
+		width: osize.width
+	};
+};
 
 function getNextAvailable(part, osize, widthChange, lengthChange) {
 	// grabing the sizes sheet for the part
@@ -207,6 +259,8 @@ function getNextAvailable(part, osize, widthChange, lengthChange) {
 	if(widthChange === 0 && lengthChange === 0) {
 		return -1;
 	}
+
+	// need to check if exceed max size
 
 	var wtol_t = wtol;
 	var ltol_t = ltol;
