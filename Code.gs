@@ -57,7 +57,7 @@ var sizeColMap = {
 	"Sock Size": 2,
 	"Tunic Size": 2,
 	"Parka Size": 3,
-    "Boot Size": 3
+	"Boot Size": 3
 
 };
 
@@ -104,7 +104,9 @@ function getRequestSheet() {
 *	int nsize,
 *	int osize,
 *	bool toOrder,
-*	str notes
+*	str notes,
+* int widthChange,
+* int lengthChange
 * }
 */
 function addRequest(requestObj) {
@@ -116,10 +118,12 @@ function addRequest(requestObj) {
 	var nsize = requestObj.nsize;
 	var osize = requestObj.osize;
 	var orderString = requestObj.toOrder ? "Order" : "In inventory";
+	var widthChange = requestObj.widthChange;
+	var lengthChange = requestObj.lengthChange;
 
 	// for next week!
 	var reqsheet = getRequestSheet();
-	reqsheet.appendRow([lname, fname, rank, part, nsize, orderString]);
+	reqsheet.appendRow([lname, fname, rank, part, osize, nsize, widthChange, lengthChange, orderString, notes]);
 
 	// for easier returning stuff
 	var recsheet = getRecordSheet();
@@ -131,8 +135,8 @@ function getSize(part, size) {
 	// ugh
 	if(part === "Boots") {
 		size =
-			size.substring(0, size.indexOf('-')).trim() + '-' +
-			size.substring(size.indexOf('-') + 1).trim();
+		size.substring(0, size.indexOf('-')).trim() + '-' +
+		size.substring(size.indexOf('-') + 1).trim();
 
 	} else if(part === "Dress Shirt" && isNaN(size)) {
 		// idc if it's m or l, you need a one anyways
@@ -148,19 +152,19 @@ function getSizeIndex(part, osize, sheet) {
 	var sizes = sheet.getDataRange().getValues();
 	var sheetName = sourceSizeMap[part];
 	for(var i = 0; i < data.length; i++) {
-        if(sizes[i][sizeColMap[sheetName]] == osize) {
-          return i;
-        }
+		if(sizes[i][sizeColMap[sheetName]] == osize) {
+			return i;
+		}
 	}
 
 	return -1;
 };
 
 function getSizeByIndex(part, index, sheet) {
-    var sizes = sheet.getDataRange().getValues();
-    var sheetName = sourceSizeMap[part];
+	var sizes = sheet.getDataRange().getValues();
+	var sheetName = sourceSizeMap[part];
 
-    return sizes[index][sizeColMap[sheetName]];
+	return sizes[index][sizeColMap[sheetName]];
 };
 
 function getGenericSizedItem(part, osize, osizeI, widthOffset, lengthOffset, sheet) {
@@ -222,71 +226,77 @@ function getNextPantsSize(osize,osizeI, widthOffset, lengthOffset, sheet) {
 function getNextBootSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
 	// boots are two part sized
 	// osize is an obj
-  
+
     // deep copy
-	var nsize = {
-		length: osize.length,
-		width: osize.width
-	};
+    var nsize = {
+    	length: osize.length,
+    	width: osize.width
+    };
 
-  while(ltol_t > 0 && osizeI > 0 && lengthOffset && nsize.substring(0, nsize.indexOf('-')) === osize.substring(0, osize.indexOf('-'))) {
-      osizeI += lengthOffset;
-      nsize = getSizeByIndex(part, osizeI, sheet);
-  }
-
-  while(ltol_t > 0 && osizeI > 0 && widthOffset && nsize.substring(nsize.indexOf('-') + 1) === osize.substring(osize.indexOf('-') + 1)) {
-      osizeI += widthOffset;
-      nsize = getSizeByIndex(part, osizeI, sheet);
-  }
-  
-  return {nsize: nsize, nsizeI: osizeI};
-};
-
-function getNextUnNumdSize(part, osize, osizeI, sheet) {
-    var nsize, nsizeI = 0;
-
-    switch(osize) {
-        case 'XS':
-            nsize = 'S';
-            break;
-        case 'S':
-            nsize = 'M';
-            break;
-        case 'M':
-            nsize = 'L';
-            break;
-        case 'L':
-            nsize = 'XL';
-            break;
-        case 'XL':
-            nsize = 'XL';
-            nsizeI = -1;
-            break;
+    while(ltol_t > 0 && osizeI > 0 && lengthOffset && nsize.substring(0, nsize.indexOf('-')) === osize.substring(0, osize.indexOf('-'))) {
+    	osizeI += lengthOffset;
+    	nsize = getSizeByIndex(part, osizeI, sheet);
     }
-  
-    nsizeI += (osizeI + 1);
-    return { nsize: nsize, nsizeI: nsizeI };
-};
 
-function getNextBeltSize(part, osize, osizeI, sheet) {
-    return { nsize: 'X-LONG', nsizeI: osizeI };
-}
+    while(ltol_t > 0 && osizeI > 0 && widthOffset && nsize.substring(nsize.indexOf('-') + 1) === osize.substring(osize.indexOf('-') + 1)) {
+    	osizeI += widthOffset;
+    	nsize = getSizeByIndex(part, osizeI, sheet);
+    }
 
-var newSizeFuncs = {
-    "Headdress": getNextWedgeSize,
-	"Dress Shirt": getNextDSSize,
-	"MT": getNextPantsSize,
-	"Socks": getNextUnNumdSize,
-	"Tunic": getNextTunicSize,
-	"Parka": getNextParkaSize,
-	"Boots": getNextBootSize,
-	"BS": getNextUnNumdSize,
-	"Tie": getNextUnNumdSize,
-	"Belt": getNextBeltSize,
-	"PT Shirt": getNextUnNumdSize
-};
+    return {nsize: nsize, nsizeI: osizeI};
+  };
 
-function getNextAvailable(part, osize, widthChange, lengthChange) {
+  function getNextUnNumdSize(part, osize, osizeI, sheet) {
+  	var nsize, nsizeI = 0;
+
+  	switch(osize) {
+  		case 'XS':
+  		nsize = 'S';
+  		break;
+  		case 'S':
+  		nsize = 'M';
+  		break;
+  		case 'M':
+  		nsize = 'L';
+  		break;
+  		case 'L':
+  		nsize = 'XL';
+  		break;
+  		case 'XL':
+  		nsize = 'XL';
+  		nsizeI = -1;
+  		break;
+  	}
+
+  	nsizeI += (osizeI + 1);
+  	return { nsize: nsize, nsizeI: nsizeI };
+  };
+
+  function getNextBeltSize(part, osize, osizeI, sheet) {
+  	return { nsize: 'X-LONG', nsizeI: osizeI };
+  }
+
+  var newSizeFuncs = {
+  	"Headdress": getNextWedgeSize,
+  	"Dress Shirt": getNextDSSize,
+  	"MT": getNextPantsSize,
+  	"Socks": getNextUnNumdSize,
+  	"Tunic": getNextTunicSize,
+  	"Parka": getNextParkaSize,
+  	"Boots": getNextBootSize,
+  	"BS": getNextUnNumdSize,
+  	"Tie": getNextUnNumdSize,
+  	"Belt": getNextBeltSize,
+  	"PT Shirt": getNextUnNumdSize
+  };
+
+  function partIsAvailable(part, nsizeObj) {
+  	;
+  };
+
+  function markPartTaken(part, nsizeObj) {};
+
+  function getNextAvailable(part, osize, widthChange, lengthChange) {
 	// grabing the sizes sheet for the part
 	var sizingSheet = getSheet(sourceSheetName, sourceSizeMap[part]);
 	var osizeI = getSizeIndex(part, osize, sizingSheet);
@@ -310,25 +320,43 @@ function getNextAvailable(part, osize, widthChange, lengthChange) {
 	}
 
 	// need to check if exceed max size
+	if(osizeI + 1 === sizingSheet.getLastRow()) {
+		return -1;
+	}
 
 	var wtol_t = wtol;
 	var ltol_t = ltol;
 	var nsizeObj = {};
-  
-    // next size needed
-    nsizeObj = newSizeFuncs[part](osize, osizeI, widthChange, lengthChange, sizingSheet);
-  
-    // if it's bs, tie, belt or pt shirt we can just straight return
-    // might need to adapt or remove this depending on how your inventory works; we don't have counts on those items.
-    if(part === 'BS' || part === 'Tie' || part === 'Belt' || part === 'PT Shirt') {
-        return nsizeObj;
-    }
+	var lastRow = sizingSheet.getLastRow();
+	var toOrder = false;
+
+  // next size needed
+  nsizeObj = newSizeFuncs[part](osize, osizeI, widthChange, lengthChange, sizingSheet);
+
+  // if it's bs, tie, belt or pt shirt we can just straight return
+  // might need to adapt or remove this depending on how your inventory works; we don't have counts on those items.
+  if(part === 'BS' || part === 'Tie' || part === 'Belt' || part === 'PT Shirt') {
+  	return {nsize: nsizeObj.nsize, toOrder: false};
+  }
+
+  // deep copy
+  var bestfit = {nsize: nsizeObj.nsize, nsizeI: nsizeObj.nsizeI};
 
 	// now we look for closest one we can give within tolerance
-	while(nsizeI < 0 && wtol_t > 1 && ltol_t > 1) {
+	while(nsizeI < 0 && wtol_t > 0 && ltol_t > 0 && !(toOrder = partIsAvailable(part, nsizeObj))) {
 		nsizeObj = newSizeFuncs[part](osize, osizeI, widthChange, lengthChange, sizingSheet);
+		if(nsizeObj.nsizeI + 1 > lastRow) {
+			return -1;
+		}
 	}
-  
+
+	if(!toOrder) {
+		markPartTaken(part, nsizeObj);
+		return {nsize:nsizeObj.nsize, toOrder: toOrder};
+	}
+
+	return {nsize: bestfit.nsize, toOrder: toOrder};
+
 };
 
 /* ----------------------- actual updating func ----------------------- */
@@ -349,10 +377,14 @@ function updateResponse(formResponse) {
 	var widthChange = formResponse.widthChange;
 	var lengthChange = formResponse.lengthChange;
 
-    // get next available size to offer
-	requestObj.nsize = getNextAvailable(part, requestObj.osize, widthChange, lengthChange);
+  // get next available size to offer
+  requestObj.nsize = getNextAvailable(part, requestObj.osize, widthChange, lengthChange);
   
-    // add to request list
+  // add to request list
+  requestObj.lengthChange = lengthChange;
+  requestObj.widthChange = widthChange;
+
+  requestObj.toOrder = requestObj.toOrder;
 };
 
 /* ----------------------- API Function ----------------------- */
