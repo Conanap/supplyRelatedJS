@@ -324,10 +324,11 @@ function getNextAvailable(part, osize, widthChange, lengthChange) {
         return nsizeObj;
     }
 
-	// now we look for new size
+	// now we look for closest one we can give within tolerance
 	while(nsizeI < 0 && wtol_t > 1 && ltol_t > 1) {
 		nsizeObj = newSizeFuncs[part](osize, osizeI, widthChange, lengthChange, sizingSheet);
 	}
+  
 };
 
 /* ----------------------- actual updating func ----------------------- */
@@ -351,7 +352,7 @@ function updateResponse(formResponse) {
     // get next available size to offer
 	requestObj.nsize = getNextAvailable(part, requestObj.osize, widthChange, lengthChange);
   
-    // now find the closest size within tolerance
+    // add to request list
 };
 
 /* ----------------------- API Function ----------------------- */
