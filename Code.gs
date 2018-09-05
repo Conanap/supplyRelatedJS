@@ -193,9 +193,6 @@ function getGenericFourDigitSize(part, osize, osizeI, widthOffset, lengthOffset,
 		// nsizeI = getSizeIndex(part, tempi, sheet);
 		nsize = getSizeByIndex(part, tempi, sheet);
 	}
-	if(lengthOffset) {
-		ltol_t--;
-	}
 
 	// move to same width
 	while(nsize.substring(2) != osize.substring(2)) {
@@ -208,9 +205,6 @@ function getGenericFourDigitSize(part, osize, osizeI, widthOffset, lengthOffset,
 	while(wtol_t > 0 && tempi > 0 && widthOffset && nsize.substring(2) == osize.substring(2)) {
 		tempi += widthOffset;
 		nsize = getSizeByIndex(part, tempi, sheet);
-	}
-	if(widthOffset) {
-		wtol_t--;
 	}
 
 	return {nsize: nsize, nsizeI: tempi};
@@ -231,10 +225,24 @@ function getNextPantsSize(osize,osizeI, widthOffset, lengthOffset, sheet) {
 function getNextBootSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
 	// boots are two part sized
 	// osize is an obj
+  
+    // deep copy
 	var nsize = {
 		length: osize.length,
 		width: osize.width
 	};
+
+  while(ltol_t > 0 && osizeI > 0 && lengthOffset && nsize.length === osize.length) {
+      osizeI += lengthOffset;
+      nsize = getSizeByIndex(part, osizeI, sheet);
+  }
+
+  while(ltol_t > 0 && osizeI > 0 && widthOffset && nsize.width === osize.width) {
+      osizeI += widthOffset;
+      nsize = getSizeByIndex(part, osizeI, sheet);
+  }
+  
+  return {length: nsize.length, width: nsize.width, nsizeI: osizeI};
 };
 
 function getNextAvailable(part, osize, widthChange, lengthChange) {
