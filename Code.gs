@@ -131,8 +131,8 @@ function getSize(part, size) {
 	// ugh
 	if(part === "Boots") {
 		size = {
-			length: size.substring(0, size.indexOf('-')),
-			length: size.substring(size.indexOf('-') + 1)
+			length: size.substring(0, size.indexOf('-')).trim(),
+			length: size.substring(size.indexOf('-') + 1).trim()
 		};
 
 	} else if(part === "Dress Shirt" && isNaN(size)) {
@@ -150,8 +150,8 @@ function getSizeIndex(part, osize, sheet) {
 	var sheetName = sourceSizeMap[part];
 	for(var i = 0; i < data.length; i++) {
 		if(part === "Boots") {
-			if(sizes[i][sizeColMap[sheetName]] == osize.length &&
-				sizes[i][sizeColMap[sheetName] + 1] == osize.width) {
+			if(sizes[i][sizeColMap[sheetName].length] == osize.length &&
+				sizes[i][sizeColMap[sheetName].width] == osize.width) {
 				return i;
 			}
 		} else {
@@ -164,7 +164,19 @@ function getSizeIndex(part, osize, sheet) {
 	return -1;
 };
 
-function getSizeByIndex(part, index, sheet) {};
+function getSizeByIndex(part, index, sheet) {
+    var sizes = sheet.getDataRange().getValues();
+    var sheetName = sourceSizeMap[part];
+  
+    if(part === "Boots") {
+        return {
+            length: size[index][sizeColMap[sheetName].length],
+            width: size[index][sizeColMap[sheetName].width]
+        };
+    } else {
+        return sizes[index][sizeColMap[sheetName]];
+    }
+};
 
 function getGenericSizedItem(part, osize, osizeI, widthOffset, lengthOffset, sheet) {
 	if(widthOffset > 0 || lengthOffset > 0) {
@@ -298,7 +310,10 @@ function updateResponse(formResponse) {
 	var widthChange = formResponse.widthChange;
 	var lengthChange = formResponse.lengthChange;
 
+    // get the perfect size for le mans
 	requestObj.nsize = getNextAvailable(part, requestObj.osize, widthChange, lengthChange);
+  
+    // now find the closest size within tolerance
 };
 
 /* ----------------------- API Function ----------------------- */
