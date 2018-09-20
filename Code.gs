@@ -148,6 +148,18 @@ function getSize(part, size) {
 	return size;
 };
 
+function getRowIndex(search, searchCol, minRow, sheet) {
+	var data = sheet.getDataRange().getValues();
+
+	for(var i = minRow; i < data.length; i++) {
+		if(data[i][searchCol] === 'search') {
+			return searchCol;
+		}
+	}
+
+	return -1;
+}
+
 function getSizeIndex(part, osize, sheet) {
 	var sizes = sheet.getDataRange().getValues();
 	var sheetName = sourceSizeMap[part];
@@ -291,10 +303,47 @@ function getNextBootSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
   };
 
   function partIsAvailable(part, nsizeObj) {
-  	;
+  	var inventory = getSheet(sourceSheetName, part);
+  	var data = inventory.getDataRange().getValues();
+  	var index;
+
+  	if(part !== "Boots") {
+  		index = getRowIndex(nsizeObj.nsize, 0, 0, inventory);
+  	} else {
+  		var temp = {
+  			length: nsizeObj.nsize.split('-')[0],
+  			width: nsizeObj.nsize.split('-')[1]
+  		};
+  	}
   };
 
-  function markPartTaken(part, nsizeObj) {};
+  // returns true on successful marking of item
+  function markPartTaken(part, nsizeObj) {
+  	var inventory = getSheet(sourceSheetName, part);
+  	var data = inventory.getDataRange().getValues();
+
+  	var lastCol = data.getLastCol();
+
+  	var dist, inv;
+
+  	var index = getSizeIndex(part, nsize.nsize, inventory);
+  	if(data[index].length === lastCol) {
+  		dist = inventory.getRange(index, lastCol).getValue();
+  		inv = inventory.getRange(index, lastCol - 1).getValue();
+  		if (inv - dist > 0) {
+  			inventory.getRange(index, lastCol).setValue(dist++);
+  			return true;
+  		}
+  	} else {
+			inv = inventory.getRange(index, lastCol - 1).getValue();
+  		if(inv > 0) {
+  			inventory.getRange(index, lastCol).setValue(1);
+  			return true;
+  		}
+  	}
+
+  	return false;
+  };
 
   function getNextAvailable(part, osize, widthChange, lengthChange) {
 	// grabing the sizes sheet for the part
@@ -341,18 +390,29 @@ function getNextBootSize(osize, osizeI, widthOffset, lengthOffset, sheet) {
 
   // deep copy
   var bestfit = {nsize: nsizeObj.nsize, nsizeI: nsizeObj.nsizeI};
+  toOrder = partIsAvailable(part, bestfit);
 
 	// now we look for closest one we can give within tolerance
-	while(nsizeI < 0 && wtol_t > 0 && ltol_t > 0 && !(toOrder = partIsAvailable(part, nsizeObj))) {
+	while(nsizeI > 0 && nsizeI <= lastRow && wtol_t > 0 && ltol_t > 0 && !toOrder) {
 		nsizeObj = newSizeFuncs[part](osize, osizeI, widthChange, lengthChange, sizingSheet);
 		if(nsizeObj.nsizeI + 1 > lastRow) {
-			return -1;
+			return {nsize: bestfit.nsize, toOrder: true};
 		}
+		toOrder = partIsAvailable(part, nsizeObj);
 	}
 
 	if(!toOrder) {
-		markPartTaken(part, nsizeObj);
-		return {nsize:nsizeObj.nsize, toOrder: toOrder};
+		// aquire lock
+		lock = LockService.getScriptLock();
+		lock.tryLock(2000);
+
+		// CRITICAL SECTION
+		var success = markPartTaken(part, nsizeObj);
+		lock.releaseLock();
+		// END OF CRITICAL SECTION
+
+		// in case of fail
+		return {nsize:nsizeObj.nsize, toOrder: !success};
 	}
 
 	return {nsize: bestfit.nsize, toOrder: toOrder};
